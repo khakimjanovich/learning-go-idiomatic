@@ -98,4 +98,135 @@
     var myFirstInitial rune = 'J' // good - the type name matches the usage
     var myLastInitial int32 = 'B' // bad - legal but confusing
     ```
-    
+14. Go doesn't allow *automatic type promotion* between variables. Type conversion must be used when variable types do
+    not match. This makes it clear exactly what type you want without having to memorize any type conversion rules
+15. In Go, no other type can be converted to a bool, implicitly or explicitly. You can do it by comparison operators
+16. Type conversions are one of the places where Go chooses to add a little verbosity in exchange for a great deal of 
+    simplicity and clarity. 
+17. A literal string cannot be assigned to a variable with a numeric type or a literal number to a string variable, nor 
+    can you assign a float literal to an int. These are all flagged by the compiler as errors. Size limitations also 
+    exist; while you can write numeric literals that are larger than any integer can hold, it is a compile-time error to
+    try to assign a literal whose value overflows the specified variable, such as trying to assign the literal 1000 to a
+    variable of type byte.
+
+## var Versus :=
+
+1. The most verbose way to declare a variable in Go 
+    ```go 
+        var x int = 10
+   ```
+2. Default type of an integer literal is **int**.  
+    ```go
+        var x = 10
+    ```
+3. We can first declare a var and assign it the zero value
+    ```go
+        var x int
+    ```
+4. We can declare multiple variables at once with var, and they can be of the same type
+    ```go
+        var x, y int = 10, 20
+    ```
+5. We can declare all zero values of the same type, or of different types
+    ```go
+        var x, y int
+        var z, w = 10, "hello"
+    ```
+6. We can wrap multiple variables in a declaration list
+    ```go
+        var (
+            x    int
+            y           = 20
+            z    int
+            d, e        = 40, "hello"
+            f, g string
+        )
+    ```
+7. Within a function we can use `:=` operator to replace var declaration that use type inference
+    ```go
+        var x = 10
+        x := 10 
+        var x, y = 10, "hello"
+        x, y := 10, "hello"
+    ```
+8. The `:=` operator can do one trick that you cannot do with `var`: it allows you to assign values to existing 
+    variables too. As long as at least one new variable is on the lefthand side of the `:=`, any of the other variables
+    can already exist:
+    ```go
+         x := 10
+         x, y := 30, "hello"
+    ```
+9. Using `:=` has one limitation. If you are declaring a variable at the package level, you must use `var` because `:=` 
+   is not legal outside of functions.
+10. The most common declaration style within functions is `:=`
+11. Outside of a function, use declaration lists on the rare occasions when you are declaring multiple package-level 
+    variables.
+12. In some situations within functions, you should avoid `:=`:
+    * When initializing a variable to its zero value, use `var x int`. This makes it clear
+      that the zero value is intended.
+    * When assigning an untyped constant or a literal to a variable and the default type
+      for the constant or literal isn’t the type you want for the variable, use the long var
+      form with the type specified. While it is *legal* to use a type conversion to specify
+      the type of the value and use `:=` to write `x := byte(20)`, it is **idiomatic** to write
+      `var x byte = 20`.
+    * Because `:=` allows you to assign to both new and existing variables, it sometimes
+      creates new variables when you think you are reusing existing ones. In those situations, 
+      explicitly declare all your new variables with `var` to make it clear which variables are 
+      **new**, and then use the assignment operator `(=)` to assign values to both **new** and **old variables**.
+13. While `var` and `:=` allow you to declare multiple variables on the same line, use this style only when assigning 
+    multiple values returned from a function or ``the comma ok idiom``
+14. You should rarely declare variables outside of functions, in what’s called the *package block*
+15. Package-level variables whose values change are a `bad idea`. When you have a variable outside of a function, it can 
+    be difficult to track the changes made to it, which makes it hard to understand how data is flowing through your 
+    program. This can lead to subtle bugs. As a general rule, you should only declare variables in the package block 
+    that are effectively `immutable`.
+16. Avoid declaring variables outside of functions because they complicate data flow analysis.
+
+## Using Const
+1. Go provide a way to declare a value as immutable by `const` keyword. 
+    ```go
+    package main
+   
+    import "fmt"
+   
+    const x int64 = 10
+   
+    const (
+	    idKey = "id"
+	    nameKey = "name"
+    )
+   
+    const z = 20 * 10
+   
+    func main() {
+	    const y = "hello"
+	    fmt.Println(x)
+	    fmt.Println(y)
+	    x = x + 1 // this will not compile!
+	    y = "bye" // this will not compile!
+	    fmt.Println(x)
+	    fmt.Println(y)
+    }
+    ```
+   When you run this code, compilation fails with the following error messages:
+   ```
+   ./prog.go:20:2: cannot assign to x (constant 10 of type int64)
+   ./prog.go:21:2: cannot assign to y (untyped string constant "hello")
+   ```
+2. Be aware that const in Go is very limited. Constants in Go are a way to give names to literals. They can only hold 
+   values that the compiler can figure out at compile time. This means that they can be assigned:
+   * Numeric literals 
+   * true and false 
+   * Strings 
+   * Runes
+   * The values returned by the built-in functions complex, real, imag, len, and cap
+   * Expressions that consist of operators and the preceding values
+3. Go doesn’t provide a way to specify that a value calculated at runtime is immutable.
+    ```go
+    x := 5
+    y := 10
+    const z = x + y // this won't compile!
+    ```
+4. There are no immutable arrays, slices, maps, or structs, and there’s no way to declare that a field in a struct is 
+   immutable
+5. Constants in Go are a way to give names to literals. There is no way in Go to declare that a variable is immutable.
