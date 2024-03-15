@@ -230,3 +230,30 @@
 4. There are no immutable arrays, slices, maps, or structs, and there’s no way to declare that a field in a struct is 
    immutable
 5. Constants in Go are a way to give names to literals. There is no way in Go to declare that a variable is immutable.
+
+## Typed and Untyped Constants
+
+1. Constants can be typed and untyped. An untyped constant works exactly like a literal; it has no type of its own  but
+   does have a default type when no other type can be inferred
+2. A typed constant can be directly assigned only to a variable of that type
+   ```go
+    //untyped constant
+    const x = 10  
+    // All of the following assignments are legal:
+    var y int = x
+    var z float64 = x
+    var d byte = x
+    //typed constant
+    const typedX int = 10 
+    // This constant can be assigned directly only to an int. Assigning it to any other type produces a compile-time 
+    // error like this:
+    // cannot use typedX (type int) as type float64 in assignment
+   ```
+3. Another Go requirement is that *every declared local variable must be read*. It is a *compile-time error* to declare a 
+   local variable and to not read its value.
+4. The Go compiler won’t stop you from creating unread package-level variables. This is one more reason you should avoid
+   creating package-level variables.
+5. The Go compiler allows you to create unread constants with const. This is because constants in Go are calculated at 
+   compile time and cannot have any side effects. This makes them easy to eliminate: if a constant isn’t used, it is 
+   simply not included in the compiled binary.
+6. 
