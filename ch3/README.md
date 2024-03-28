@@ -53,13 +53,13 @@
 
 ## Slices
 
-1. Working with slices looks a lot like working with arrays, but subtle differences exist. The first thing to notice is 
+1. Working with slices looks a lot like working with arrays, but subtle differences exist. The first thing to notice is
    that you don’t specify the size of the slice when you declare it:
    ```go
    var x = []int{10, 20, 30}
    ```
 2. Using [...] makes an array. Using [] makes a slice.
-3. This creates a slice of three ints using a slice literal. Just as with arrays, we can also specify only the indices 
+3. This creates a slice of three ints using a slice literal. Just as with arrays, we can also specify only the indices
    with nonzero values in the slice literal:
    ```go
    var x = []int{1, 5: 4, 6, 10: 100, 15}
@@ -83,16 +83,17 @@
    ```
 7. In Go, *nil* is an identifier that represents the lack of a value for some types. Like the untyped numeric constants,
    *nil* has no type, so it can be assigned or compared against values of different types. A nil slice contains nothing.
-8. A slice isn’t comparable. It is a compile-time error to use == to see if two slices are identical or != to see if 
+8. A slice isn’t comparable. It is a compile-time error to use == to see if two slices are identical or != to see if
    they are different. The only thing WE can compare a slice with using == is nil:
    ```go
    fmt.Println(x == nil) // prints true
    ```
-9. Since Go 1.21, the slices package in the standard library includes two functions to compare slices. The *slices.Equal* 
-   function takes in two slices and returns true if the slices are the same length, and all of the elements are equal. 
-   It requires the elements of the slice to be comparable. The other function, slices.EqualFunc, lets you pass in a 
-   function to determine equality and does not require the slice elements to be comparable. You’ll learn about passing 
-   functions into functions in “Passing Functions as Parameters” on page 107. The other functions in the slices package 
+9. Since Go 1.21, the slices package in the standard library includes two functions to compare slices. The
+   *slices.Equal*
+   function takes in two slices and returns true if the slices are the same length, and all of the elements are equal.
+   It requires the elements of the slice to be comparable. The other function, slices.EqualFunc, lets you pass in a
+   function to determine equality and does not require the slice elements to be comparable. You’ll learn about passing
+   functions into functions in “Passing Functions as Parameters” on page 107. The other functions in the slices package
    are covered in “Adding Generics to the Standard Library” on page 201.
    ```go
    x := []int{1, 2, 3, 4, 5}
@@ -105,12 +106,15 @@
    ```
 
 ## len
+
 1. Passing a nil slice to len returns 0.
-2. Functions like *len* are built into Go, because they can do things that can’t be done by the functions that you can 
-   write. You’ve already seen that len’s parameter can be any type of array or any type of slice, it also works for 
-   strings and maps, channels. Trying to pass a variable of any other type to len is a compile-time error. Go doesn’t 
+2. Functions like *len* are built into Go, because they can do things that can’t be done by the functions that you can
+   write. You’ve already seen that len’s parameter can be any type of array or any type of slice, it also works for
+   strings and maps, channels. Trying to pass a variable of any other type to len is a compile-time error. Go doesn’t
    let developers write a function that accepts any string, array, slice, channel, or map, but rejects other types.
+
 ## append
+
 1. The built-in append function is used to grow slices
 2. One slice is appended onto another by using the ... operator to expand the source slice into individual values
    ```go
@@ -145,6 +149,74 @@
    runtime in the binary is that even the simplest Go program produces a binary that’s about 2 MB.
 
 
-4. When a slice grows via append, it takes time for the Go runtime to allocate new memory and copy the existing data 
+4. When a slice grows via append, it takes time for the Go runtime to allocate new memory and copy the existing data
    from the old memory to the new.
-5. 
+5. Make function allows you to specify the type, the length, and, optionally the capacity of the slice.
+   ```go
+   x := make([]int, 5) //This creates an int slice with a length of 5 and a capacity of 5.
+   ```
+6. One common beginner mistake is to try to populate those initial elements using append:
+   ```go
+   x := make([]int, 5) 
+   x = append(x, 10) 
+   // The 10 is placed at the end of the slice, after the zero values in elements 0–4 because
+   // append always increases the length of a slice. The value of x is now [0 0 0 0 0 10],
+   // with a length of 6 and a capacity of 10 (the capacity was doubled as soon as the sixth
+   // element was appended).
+   ```
+7. You can also specify an initial capacity with make:
+   ```go
+   x: = make([]int, 5, 10)
+   // This creates an int slice with a length of 5 and a capacity of 10.
+   ```
+
+8. You can also create a slice with zero length but a capacity that’s greater than zero:
+   ```go
+   x := make([]int, 0, 10)
+   // In this case, you have a non-nil slice with a length of 0 but a capacity of 10. Since the
+   // length is 0, you can’t directly index into it, but you can append values to it:
+   // x := make([]int, 0, 10) x = append(x, 5,6,7,8)
+   // The value of x is now [5 6 7 8], with a length of 4 and a capacity of 10
+   ```
+9. Emptying a slice: Go 1.21 added a clear function that takes in a slice and sets all the slice’s elements
+   to their zero value. The length of the slice remains unchanged. The following code:
+   ```go
+   s := []string{"first", "second", "third"}
+   fmt.Println(s, len(s))
+   clear(s)
+   fmt.Println(s, len(s))
+   ```
+10. Declaring a slice: The primary goal is to minimize the number of times the slice needs to grow. 
+    1. If it’s possible that the slice won’t need to grow at all, use a var declaration with no assigned value to create
+    a nil slice 
+    ```go
+       var data []int
+    ```
+    **NOTE!** You can create a slice using an empty slice literal:
+      ```go
+      var x = []int{}
+      ```
+      This creates a slice with zero length and zero capacity. It is confusingly different from a nil slice. Because of 
+      implementation reasons, comparing a zero-length slice to nil returns false, while comparing a nil slice to nil 
+      returns true. For simplicity, favor nil slices. A zero-length slice is useful only when converting a slice to JSON 
+    2. If you have some starting values, or if a slice’s values aren’t going to change, then a slice literal is a good choice
+    ```go
+     data := []int{2, 4, 6, 8} // numbers we appreciate
+    ```
+    3. If you have a good idea of how large your slice needs to be, but don’t know what those values will be when you 
+       are writing the program, use make. The question then becomes whether you should specify a nonzero length in the 
+       call to make or specify a zero length and a nonzero capacity. There are three possibilities:
+       1. If you are using a slice as a buffer, then specify a nonzero length.
+       2. If you are sure you know the exact size you want, you can specify the length and index into the slice to set 
+          the values. This is often done when transforming values in one slice and storing them in a second. The 
+          downside to this approach is that if you have the size wrong, you’ll end up with either zero values at the end
+          of the slice or a panic from trying to access elements that don’t exist.
+       3. In other situations, use make with a zero length and a specified capacity. This allows you to use append to 
+          add items to the slice. If the number of items turns out to be smaller, you won’t have an extraneous zero 
+          value at the end. If the number of items is larger, your code will not panic
+11. Slicing slices: A slice expression creates a slice from a slice. It's written inside brackets and consists of a 
+    starting of a starting offset and an ending offset, separated by a colon (:). The starting offset is the first 
+    position in the slice that is included in the new slice, and the ending offset is one past the last position to 
+    include. If you leave off the starting offset, 0 is assumed. Likewise, if you leave off the ending offset, the end 
+    of the slice is substituted.
+12. 
